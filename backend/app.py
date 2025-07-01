@@ -65,21 +65,23 @@ def optimize_prompt_route():
     optimization_history = [] # To track changes
 
     for i in range(max_iterations): # Overall optimization loop
-        prompt_changed_in_iteration = False
+        # Step 1: Generate outputs for ALL examples with current prompt
+        batch_results = []
+        
         for example in examples:
             example_input = example.get("input")
             desired_output = example.get("output")
 
             if not example_input or not desired_output:
-                optimization_history.append({
-                    "iteration": i + 1,
-                    "example_input": example_input,
-                    "status": "Skipped",
-                    "reason": "Missing input or output for example"
+                batch_results.append({
+                    "input": example_input,
+                    "desired_output": desired_output,
+                    "generated_output": "SKIPPED - Missing input or output",
+                    "status": "skipped"
                 })
                 continue
 
-            # Step 1: Generate output with current prompt and example input
+            # Generate output with current prompt and example input
             # Check for {{input}} placeholder in the prompt
             prompt_to_use_for_generation = ""
             if "{{input}}" in current_prompt:
@@ -92,81 +94,93 @@ def optimize_prompt_route():
             if isinstance(generated_output_response, dict) and "error" in generated_output_response:
                 return jsonify({"error": f"LLM call failed during generation: {generated_output_response['error']}"}), 500
             
-            generated_output = generated_output_response
-
-            # Step 2: Analyzer LLM call
-            analyzer_system_message = (
-                "You are an expert AI prompt engineer with deep expertise in optimizing prompts for maximum effectiveness. "
-                "Your task is to analyze and improve a prompt based on its performance against a specific example.\n\n"
-                
-                "## Analysis Framework:\n"
-                "1. **Gap Analysis**: Compare the generated output vs desired output. Identify specific discrepancies in:\n"
-                "   - Content accuracy and completeness\n"
-                "   - Format, structure, and style\n"
-                "   - Tone, voice, and register\n"
-                "   - Length and detail level\n"
-                "   - Missing or extra information\n\n"
-                
-                "2. **Root Cause**: Determine what aspect of the current prompt caused the deviation:\n"
-                "   - Insufficient specificity or clarity\n"
-                "   - Missing instructions about format/style\n"
-                "   - Ambiguous language or conflicting directives\n"
-                "   - Lack of examples or context\n"
-                "   - Over-specification that limits flexibility\n\n"
-                
-                "3. **Optimization Strategy**: Apply prompt engineering best practices:\n"
-                "   - Add specific instructions for identified gaps\n"
-                "   - Include format specifications if needed\n"
-                "   - Clarify ambiguous terms\n"
-                "   - Add relevant context or constraints\n"
-                "   - Use clear, actionable language\n"
-                "   - Maintain generalizability for other examples\n\n"
-                
-                "## Decision Criteria:\n"
-                "Respond with 'KEEP_CURRENT_PROMPT' only if:\n"
-                "- Generated output matches desired output in all key aspects (content, format, style)\n"
-                "- Minor differences are acceptable variations rather than errors\n"
-                "- The prompt is already well-optimized for this type of task\n\n"
-                
-                "## Output Requirements:\n"
-                "If changes are needed, provide ONLY the revised prompt text with these qualities:\n"
-                "- Clear, specific, and unambiguous instructions\n"
-                "- Maintains or improves generalizability\n"
-                "- Addresses the identified root causes\n"
-                "- Uses proper formatting and structure\n"
-                "- Preserves any {{input}} placeholders if present\n\n"
-                
-                "Provide NO explanations, analysis, or commentary - only the prompt text or 'KEEP_CURRENT_PROMPT'."
-            )
-            analyzer_prompt = (
-                f"Current Prompt:\n{current_prompt}\n\n"
-                f"Input:\n{example_input}\n\n"
-                f"Generated Output (with current prompt):\n{generated_output}\n\n"
-                f"Desired Output:\n{desired_output}\n\n"
-                f"Based on the deviation, suggest a revised prompt or respond with 'KEEP_CURRENT_PROMPT':"
-            )
-            
-            suggestion_response = call_llm(analyzer_prompt, system_message=analyzer_system_message, max_tokens=300, temperature=0.5)
-            if isinstance(suggestion_response, dict) and "error" in suggestion_response:
-                return jsonify({"error": f"LLM call failed during analysis: {suggestion_response['error']}"}), 500
-
-            suggested_prompt = suggestion_response
-
-            optimization_history.append({
-                "iteration": i + 1,
-                "example_input": example_input,
-                "current_prompt_used": current_prompt,
-                "generated_output": generated_output,
+            batch_results.append({
+                "input": example_input,
                 "desired_output": desired_output,
-                "analyzer_suggestion": suggested_prompt
+                "generated_output": generated_output_response,
+                "status": "processed"
             })
 
-            if suggested_prompt != "KEEP_CURRENT_PROMPT" and suggested_prompt != current_prompt:
-                current_prompt = suggested_prompt
-                prompt_changed_in_iteration = True
+        # Step 2: Single Batch Analyzer LLM call for ALL examples
+        analyzer_system_message = (
+            "You are an expert AI prompt engineer with deep expertise in optimizing prompts for maximum effectiveness. "
+            "Your task is to analyze and improve a prompt based on its performance against multiple examples simultaneously.\n\n"
+            
+            "## Analysis Framework:\n"
+            "1. **Batch Gap Analysis**: Compare generated outputs vs desired outputs across ALL examples. Identify patterns in:\n"
+            "   - Content accuracy and completeness issues\n"
+            "   - Format, structure, and style inconsistencies - spelling, quotation, marks, character case, etc. may need to match the desired outputs exactly for classification tasks\n"
+            "   - Tone, voice, and register problems\n"
+            "   - Length and detail level mismatches\n"
+            "   - Missing or extra information across examples\n\n"
+            
+            "2. **Root Cause Analysis**: Determine what aspects of the current prompt caused deviations across examples:\n"
+            "   - Insufficient specificity or clarity\n"
+            "   - Missing instructions about format/style\n"
+            "   - Ambiguous language or conflicting directives\n"
+            "   - Lack of examples or context\n"
+            "   - Over-specification that limits flexibility\n\n"
+            
+            "3. **Holistic Optimization**: Apply prompt engineering best practices that address issues across ALL examples:\n"
+            "   - Add specific instructions for identified gaps\n"
+            "   - Include format specifications if needed\n"
+            "   - Clarify ambiguous terms\n"
+            "   - Add relevant context or constraints\n"
+            "   - Use clear, actionable language\n"
+            "   - Ensure generalizability across all example types\n\n"
+            
+            "## Decision Criteria:\n"
+            "Respond with 'KEEP_CURRENT_PROMPT' only if:\n"
+            "- Generated outputs match desired outputs across ALL examples in key aspects\n"
+            "- Minor differences are acceptable variations rather than systematic errors\n"
+            "- The prompt is already well-optimized for this type of task\n\n"
+            
+            "## Output Requirements:\n"
+            "If changes are needed, provide ONLY the revised prompt text that addresses issues across all examples:\n"
+            "- Clear, specific, and unambiguous instructions\n"
+            "- Addresses the identified root causes from all examples\n"
+            "- Uses proper formatting and structure\n"
+            "- Preserves any {{input}} placeholders if present\n\n"
+            "Provide NO explanations, analysis, or commentary - only the prompt text or 'KEEP_CURRENT_PROMPT'."
+        )
+
+        # Build the batch analysis prompt
+        examples_analysis = ""
+        for idx, result in enumerate(batch_results):
+            if result["status"] == "skipped":
+                continue
+            examples_analysis += f"Example {idx + 1}:\n"
+            examples_analysis += f"Input: {result['input']}\n"
+            examples_analysis += f"Generated Output: {result['generated_output']}\n"
+            examples_analysis += f"Desired Output: {result['desired_output']}\n\n"
+
+        analyzer_prompt = (
+            f"Current Prompt:\n{current_prompt}\n\n"
+            f"Performance Analysis:\n{examples_analysis}"
+            f"Based on the patterns of deviation across all examples, suggest a revised prompt or respond with 'KEEP_CURRENT_PROMPT':"
+        )
         
-        if not prompt_changed_in_iteration and i > 0: # No changes in a full pass over examples
-            optimization_history.append({"status": "Optimization converged.", "iteration": i+1})
+        suggestion_response = call_llm(analyzer_prompt, system_message=analyzer_system_message, max_tokens=400, temperature=0.5)
+        if isinstance(suggestion_response, dict) and "error" in suggestion_response:
+            return jsonify({"error": f"LLM call failed during batch analysis: {suggestion_response['error']}"}), 500
+
+        suggested_prompt = suggestion_response.strip()
+
+        # Record this iteration in history
+        optimization_history.append({
+            "iteration": i + 1,
+            "current_prompt_used": current_prompt,
+            "batch_results": batch_results,
+            "analyzer_suggestion": suggested_prompt,
+            "prompt_changed": suggested_prompt != "KEEP_CURRENT_PROMPT" and suggested_prompt != current_prompt
+        })
+
+        # Update prompt if suggestion is different
+        if suggested_prompt != "KEEP_CURRENT_PROMPT" and suggested_prompt != current_prompt:
+            current_prompt = suggested_prompt
+        else:
+            # No changes suggested - optimization has converged
+            optimization_history.append({"status": "Optimization converged - no further improvements suggested.", "iteration": i+1})
             break 
 
     return jsonify({
