@@ -1,8 +1,10 @@
 # Prompt Optimizer Web App
 
 This project is a web application designed to optimize prompts for Large Language Models (LLMs). It takes user-provided examples of inputs and desired outputs, along with an initial prompt. The application then iteratively refines the prompt using two LLM calls: one to generate an output based on the current prompt and an input example, and another (an "analyzer" LLM) to evaluate the deviation of the generated output from the desired output and suggest prompt modifications. This process continues until the outputs are acceptable across all provided examples.
-
 The application also features an option to generate synthetic examples based on an initial set of five examples provided by the user.
+
+<img width="1458" alt="Screenshot 2025-07-01 at 12 51 59 AM" src="https://github.com/user-attachments/assets/dc1ee5f7-2c04-4503-ae80-fab6941a53d5" />
+<img width="1455" alt="Screenshot 2025-07-01 at 12 52 31 AM" src="https://github.com/user-attachments/assets/57886b42-6830-4454-800f-fa2821b10049" />
 
 ## 🚀 Quick Start
 
