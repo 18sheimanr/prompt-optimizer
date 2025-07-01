@@ -533,24 +533,103 @@ function App() {
 
             {optimizationHistory.length > 0 && (
                 <div className="results-section">
-                  <details>
-                    <summary style={{ cursor: 'pointer', fontSize: '1.2em', fontWeight: 'bold', marginBottom: '10px' }}>
-                      Optimization History ({optimizationHistory.length} iterations)
+                  <details open>
+                    <summary style={{ cursor: 'pointer', fontSize: '1.2em', fontWeight: 'bold', marginBottom: '15px' }}>
+                      🔍 Optimization History ({optimizationHistory.length} iterations)
                     </summary>
-                    <ul className="history-list">
-                      {optimizationHistory.map((item, index) => (
-                        <li key={index} className="history-item">
-                          <strong>Iteration {item.iteration || 'N/A'}:</strong> {item.status || `Processed input: ${item.example_input || 'N/A'}`}
-                          {item.current_prompt_used && <details>
-                              <summary>Details</summary>
-                              <p><strong>Prompt Used:</strong> <pre>{item.current_prompt_used}</pre></p>
-                              <p><strong>Generated Output:</strong> <pre>{item.generated_output}</pre></p>
-                              <p><strong>Desired Output:</strong> <pre>{item.desired_output}</pre></p>
-                              <p><strong>Analyzer Suggestion:</strong> <pre>{item.analyzer_suggestion}</pre></p>
-                          </details>}
-                        </li>
+                    <div className="optimization-timeline">
+                      {optimizationHistory.map((iteration, index) => (
+                        <div key={index} className={`iteration-card ${iteration.status}`}>
+                          <div className="iteration-header">
+                            <div className="iteration-number">Iteration {iteration.iteration}</div>
+                            <div className={`iteration-status ${iteration.status}`}>
+                              {iteration.status === 'updated' && '🔄 Updated'}
+                              {iteration.status === 'converged' && '✅ Converged'}
+                            </div>
+                          </div>
+                          
+                          <div className="iteration-summary">
+                            <p><strong>Summary:</strong> {iteration.summary}</p>
+                            {iteration.batch_performance && (
+                              <div className="batch-metrics">
+                                <span className="metric">
+                                  📊 {iteration.batch_performance.total_examples} examples processed
+                                </span>
+                                {iteration.batch_performance.skipped_examples > 0 && (
+                                  <span className="metric warning">
+                                    ⚠️ {iteration.batch_performance.skipped_examples} skipped
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <details className="iteration-details">
+                            <summary>🔍 View Details</summary>
+                            
+                            {iteration.status === 'updated' && (
+                              <div className="prompt-comparison">
+                                <div className="prompt-section">
+                                  <h4>📝 Previous Prompt:</h4>
+                                  <pre className="prompt-text">{iteration.current_prompt_used}</pre>
+                                </div>
+                                <div className="prompt-section">
+                                  <h4>✨ Updated Prompt:</h4>
+                                  <pre className="prompt-text updated">{iteration.analyzer_suggestion}</pre>
+                                </div>
+                              </div>
+                            )}
+
+                            {iteration.batch_performance && iteration.batch_performance.examples_details && (
+                              <div className="examples-performance">
+                                <h4>📋 Example Performance:</h4>
+                                <div className="examples-grid">
+                                  {iteration.batch_performance.examples_details.map((example, exIdx) => {
+                                    if (example.status === 'skipped') {
+                                      return (
+                                        <div key={exIdx} className="example-card skipped">
+                                          <div className="example-header">
+                                            <span className="example-number">Example {exIdx + 1}</span>
+                                            <span className="example-status skipped">⏭️ Skipped</span>
+                                          </div>
+                                          <p className="skip-reason">Missing input or output</p>
+                                        </div>
+                                      );
+                                    }
+
+                                    const isMatch = example.generated_output?.trim() === example.desired_output?.trim();
+                                    return (
+                                      <div key={exIdx} className={`example-card ${isMatch ? 'match' : 'no-match'}`}>
+                                        <div className="example-header">
+                                          <span className="example-number">Example {exIdx + 1}</span>
+                                          <span className={`example-status ${isMatch ? 'match' : 'no-match'}`}>
+                                            {isMatch ? '✅ Match' : '❌ Mismatch'}
+                                          </span>
+                                        </div>
+                                        <div className="example-content">
+                                          <div className="example-field">
+                                            <label>Input:</label>
+                                            <div className="field-content">{example.input}</div>
+                                          </div>
+                                          <div className="example-field">
+                                            <label>Generated:</label>
+                                            <div className="field-content generated">{example.generated_output}</div>
+                                          </div>
+                                          <div className="example-field">
+                                            <label>Desired:</label>
+                                            <div className="field-content desired">{example.desired_output}</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </details>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </details>
                 </div>
               )}

@@ -106,42 +106,61 @@ def optimize_prompt_route():
             "You are an expert AI prompt engineer with deep expertise in optimizing prompts for maximum effectiveness. "
             "Your task is to analyze and improve a prompt based on its performance against multiple examples simultaneously.\n\n"
             
-            "## Analysis Framework:\n"
-            "1. **Batch Gap Analysis**: Compare generated outputs vs desired outputs across ALL examples. Identify patterns in:\n"
-            "   - Content accuracy and completeness issues\n"
-            "   - Format, structure, and style inconsistencies - spelling, quotation, marks, character case, etc. may need to match the desired outputs exactly for classification tasks\n"
-            "   - Tone, voice, and register problems\n"
-            "   - Length and detail level mismatches\n"
-            "   - Missing or extra information across examples\n\n"
+            "## Critical Analysis Framework:\n"
+            "1. **Precise Format Analysis**: Examine generated vs desired outputs CHARACTER BY CHARACTER for:\n"
+            "   - EXACT capitalization (uppercase/lowercase mismatches)\n"
+            "   - Quotation marks (missing, extra, or wrong type: \", ', `, etc.)\n"
+            "   - Punctuation (periods, commas, colons, semicolons, etc.)\n"
+            "   - Spacing (extra spaces, missing spaces, line breaks)\n"
+            "   - Special characters and symbols\n"
+            "   - Number formatting (1 vs 1.0 vs one)\n"
+            "   - Date/time formats\n\n"
             
-            "2. **Root Cause Analysis**: Determine what aspects of the current prompt caused deviations across examples:\n"
-            "   - Insufficient specificity or clarity\n"
-            "   - Missing instructions about format/style\n"
-            "   - Ambiguous language or conflicting directives\n"
-            "   - Lack of examples or context\n"
-            "   - Over-specification that limits flexibility\n\n"
+            "2. **Content & Structure Analysis**: Compare outputs for:\n"
+            "   - Missing or extra words/phrases\n"
+            "   - Word order and sentence structure\n"
+            "   - Completeness of information\n"
+            "   - Tone and style consistency\n"
+            "   - Length and verbosity level\n\n"
             
-            "3. **Holistic Optimization**: Apply prompt engineering best practices that address issues across ALL examples:\n"
-            "   - Add specific instructions for identified gaps\n"
-            "   - Include format specifications if needed\n"
-            "   - Clarify ambiguous terms\n"
-            "   - Add relevant context or constraints\n"
-            "   - Use clear, actionable language\n"
-            "   - Ensure generalizability across all example types\n\n"
+            "3. **Pattern Recognition**: Identify systematic issues across ALL examples:\n"
+            "   - Consistent formatting deviations (e.g., always adding quotes when shouldn't)\n"
+            "   - Repeated content errors (e.g., always capitalizing certain words)\n"
+            "   - Style inconsistencies (formal vs informal language)\n"
+            "   - Structural problems (missing sections, wrong order)\n\n"
             
-            "## Decision Criteria:\n"
-            "Respond with 'KEEP_CURRENT_PROMPT' only if:\n"
-            "- Generated outputs match desired outputs across ALL examples in key aspects\n"
-            "- Minor differences are acceptable variations rather than systematic errors\n"
-            "- The prompt is already well-optimized for this type of task\n\n"
+            "4. **Root Cause Analysis**: Determine what specific prompt deficiencies cause these issues:\n"
+            "   - Missing explicit format instructions (e.g., 'do not use quotes', 'use lowercase')\n"
+            "   - Ambiguous wording that allows multiple interpretations\n"
+            "   - Lack of specific examples showing desired format\n"
+            "   - Missing constraints or rules\n"
+            "   - Conflicting instructions\n\n"
+            
+            "5. **Precision Optimization**: Create prompt improvements that:\n"
+            "   - Add SPECIFIC format rules (e.g., 'Response must be lowercase', 'Never use quotation marks')\n"
+            "   - Include explicit examples of correct formatting\n"
+            "   - Use unambiguous, precise language\n"
+            "   - Add format validation instructions\n"
+            "   - Specify exact punctuation and capitalization rules\n"
+            "   - Pay special attention to formatting issues (capitalization, quotes, spacing, punctuation)\n\n"
+            
+            "## Decision Criteria (STRICT):\n"
+            "Respond with 'KEEP_CURRENT_PROMPT' ONLY if:\n"
+            "- Generated outputs match desired outputs EXACTLY in format AND content\n"
+            "- NO formatting discrepancies exist (capitalization, punctuation, quotes, spacing)\n"
+            "- ALL examples pass character-by-character comparison\n"
+            "- The prompt already contains sufficient format specifications\n\n"
             
             "## Output Requirements:\n"
-            "If changes are needed, provide ONLY the revised prompt text that addresses issues across all examples:\n"
-            "- Clear, specific, and unambiguous instructions\n"
-            "- Addresses the identified root causes from all examples\n"
-            "- Uses proper formatting and structure\n"
-            "- Preserves any {{input}} placeholders if present\n\n"
-            "Provide NO explanations, analysis, or commentary - only the prompt text or 'KEEP_CURRENT_PROMPT'."
+            "If ANY formatting or content issues exist, provide ONLY the revised prompt that:\n"
+            "- Addresses EVERY identified formatting issue with specific instructions\n"
+            "- Includes explicit format rules and constraints\n"
+            "- Uses precise, unambiguous language\n"
+            "- Preserves {{input}} placeholders if present\n"
+            "- Contains concrete examples if beneficial\n\n"
+            
+            "IMPORTANT: Focus heavily on EXACT FORMAT MATCHING. Even small differences in quotes, capitalization, or punctuation require prompt improvements.\n\n"
+            "Provide NO explanations, analysis, or commentary - only the revised prompt text or 'KEEP_CURRENT_PROMPT'."
         )
 
         # Build the batch analysis prompt
@@ -149,39 +168,77 @@ def optimize_prompt_route():
         for idx, result in enumerate(batch_results):
             if result["status"] == "skipped":
                 continue
-            examples_analysis += f"Example {idx + 1}:\n"
+                
+            examples_analysis += f"=== Example {idx + 1} Analysis ===\n"
             examples_analysis += f"Input: {result['input']}\n"
-            examples_analysis += f"Generated Output: {result['generated_output']}\n"
-            examples_analysis += f"Desired Output: {result['desired_output']}\n\n"
+            examples_analysis += f"Generated Output: '{result['generated_output']}'\n"
+            examples_analysis += f"Desired Output:   '{result['desired_output']}'\n"
+            
+            # Add character-by-character comparison hints
+            generated = str(result['generated_output']).strip()
+            desired = str(result['desired_output']).strip()
+            
+            if generated != desired:
+                examples_analysis += f"MISMATCH DETECTED:\n"
+                examples_analysis += f"- Generated length: {len(generated)} characters\n"
+                examples_analysis += f"- Desired length:   {len(desired)} characters\n"
+                
+                # Check for common formatting issues
+                if generated.lower() == desired.lower():
+                    examples_analysis += f"- CAPITALIZATION ISSUE: Same content, different case\n"
+                if generated.replace('"', '').replace("'", '') == desired.replace('"', '').replace("'", ''):
+                    examples_analysis += f"- QUOTATION ISSUE: Same content, different quote usage\n"
+                if generated.replace(' ', '') == desired.replace(' ', ''):
+                    examples_analysis += f"- SPACING ISSUE: Same content, different spacing\n"
+                    
+            examples_analysis += f"\n"
 
         analyzer_prompt = (
             f"Current Prompt:\n{current_prompt}\n\n"
             f"Performance Analysis:\n{examples_analysis}"
-            f"Based on the patterns of deviation across all examples, suggest a revised prompt or respond with 'KEEP_CURRENT_PROMPT':"
+            f"TASK: Analyze the mismatches above and suggest a revised prompt that will generate EXACTLY the desired outputs. "
+            f"Pay special attention to formatting issues (capitalization, quotes, spacing, punctuation). "
+            f"If ALL examples match perfectly, respond with 'KEEP_CURRENT_PROMPT'."
         )
         
-        suggestion_response = call_llm(analyzer_prompt, system_message=analyzer_system_message, max_tokens=400, temperature=0.5)
+        suggestion_response = call_llm(analyzer_prompt, system_message=analyzer_system_message, max_tokens=500, temperature=0.3)
         if isinstance(suggestion_response, dict) and "error" in suggestion_response:
             return jsonify({"error": f"LLM call failed during batch analysis: {suggestion_response['error']}"}), 500
 
         suggested_prompt = suggestion_response.strip()
 
         # Record this iteration in history
-        optimization_history.append({
+        iteration_info = {
             "iteration": i + 1,
             "current_prompt_used": current_prompt,
-            "batch_results": batch_results,
             "analyzer_suggestion": suggested_prompt,
-            "prompt_changed": suggested_prompt != "KEEP_CURRENT_PROMPT" and suggested_prompt != current_prompt
-        })
+            "prompt_changed": suggested_prompt != "KEEP_CURRENT_PROMPT" and suggested_prompt != current_prompt,
+            "batch_performance": {
+                "total_examples": len([r for r in batch_results if r["status"] == "processed"]),
+                "skipped_examples": len([r for r in batch_results if r["status"] == "skipped"]),
+                "examples_details": batch_results
+            }
+        }
+        
+        # Add iteration summary
+        if suggested_prompt == "KEEP_CURRENT_PROMPT":
+            iteration_info["summary"] = "No changes needed - prompt is performing well"
+            iteration_info["status"] = "converged"
+        elif suggested_prompt == current_prompt:
+            iteration_info["summary"] = "Analyzer returned same prompt - no improvements found"
+            iteration_info["status"] = "converged"
+        else:
+            iteration_info["summary"] = f"Prompt updated to address issues across {iteration_info['batch_performance']['total_examples']} examples"
+            iteration_info["status"] = "updated"
+        
+        optimization_history.append(iteration_info)
 
         # Update prompt if suggestion is different
         if suggested_prompt != "KEEP_CURRENT_PROMPT" and suggested_prompt != current_prompt:
             current_prompt = suggested_prompt
         else:
             # No changes suggested - optimization has converged
-            optimization_history.append({"status": "Optimization converged - no further improvements suggested.", "iteration": i+1})
-            break 
+            break
 
     return jsonify({
         "optimizedPrompt": current_prompt,
