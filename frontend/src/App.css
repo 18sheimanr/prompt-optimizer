@@ -1,0 +1,280 @@
+.App {
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.App-logo {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.App-header h1 {
+  margin: 0;
+}
+
+.api-status {
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.api-status small {
+  font-size: 0.8em;
+}
+
+.App-link {
+  display: none;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+main {
+  padding: 0 20px 20px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  text-align: left;
+}
+
+section h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+textarea {
+  width: calc(100% - 22px); /* Account for padding and border */
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.example-pair {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.example-pair textarea {
+  width: calc(50% - 22px - 7.5px); /* Account for padding, border, and gap */
+}
+
+button {
+  background-color: #007bff; /* Primary blue */
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1rem;
+  margin: 8px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background-color: #0056b3; /* Darker blue */
+}
+
+.status-message {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  color: #333;
+  background-color: #e9ecef; /* Light grey */
+  border: 1px solid #ced4da;
+}
+
+.status-message.loading {
+  background-color: #fff3cd; /* Light yellow for loading */
+  border-color: #ffeeba;
+}
+
+.results-section {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.results-section h3 {
+  margin-top: 0;
+}
+
+pre.prompt-display {
+  background-color: #eef;
+  padding: 10px;
+  border-radius: 4px;
+  white-space: pre-wrap; /* Allows text to wrap */
+  word-wrap: break-word;
+  font-size: 0.95em;
+}
+
+.history-list, .generated-examples-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.history-item, .generated-example-item {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.history-item details {
+  margin-top: 8px;
+}
+
+.history-item summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.history-item pre {
+  background-color: #f0f0f0;
+  padding: 8px;
+  border-radius: 3px;
+  margin-top: 5px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+section div label {
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 5px;
+}
+
+section div input[type="number"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 80px;
+    margin-bottom: 10px;
+}
+
+.generated-example-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.generated-example-item > div {
+  flex-grow: 1;
+}
+
+.approve-button {
+  background-color: #28a745; /* Green */
+  padding: 8px 15px;
+  font-size: 0.9em;
+}
+
+.approve-button:hover:not(:disabled) {
+  background-color: #1e7e34; /* Darker Green */
+}
+
+.actions-section {
+  display: flex;
+  gap: 10px; /* Spacing between buttons */
+  margin-bottom: 20px; /* Spacing below the action buttons */
+  align-items: center; /* Align items vertically */
+  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+}
+
+.test-button {
+  background-color: #ffc107; /* Yellow for testing */
+  color: #212529; /* Dark text for yellow background */
+}
+
+.test-button:hover:not(:disabled) {
+  background-color: #e0a800; /* Darker yellow */
+}
+
+.results-display-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa; /* Slightly different background for test results */
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+}
+
+.results-display-section h3 {
+  margin-top: 0;
+  color: #495057;
+}
+
+.test-results-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.test-result-item {
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.test-result-item p {
+  margin: 5px 0;
+}
+
+.test-result-item pre {
+  background-color: #e9ecef;
+  padding: 8px;
+  border-radius: 3px;
+  margin-top: 3px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+.error-text {
+  color: #dc3545; /* Bootstrap danger color */
+  font-weight: bold;
+}
